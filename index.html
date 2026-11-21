@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#fafafa">
+  <title>Dayflow</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --text: #111111;
+      --muted: #767676;
+      --border: #eaeaea;
+      --accent: #111111;
+      --accent-text: #ffffff;
+      --danger: #e5484d;
+      --radius: 16px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f0f10;
+      --surface: #18181b;
+      --text: #f4f4f5;
+      --muted: #8e8e93;
+      --border: #27272a;
+      --accent: #f4f4f5;
+      --accent-text: #0f0f10;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.4;
+      min-height: 100dvh;
+    }
+
+    .app {
+      max-width: 460px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 16px calc(88px + env(safe-area-inset-bottom));
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .date-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+      text-transform: capitalize;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .screen {
+      display: none;
+      flex: 1;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* Tasks */
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .input-row input {
+      flex: 1;
+      height: 48px;
+      padding: 0 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+    }
+
+    .input-row input:focus {
+      border-color: var(--text);
+    }
+
+    .btn-primary {
+      height: 48px;
+      padding: 0 18px;
+      border-radius: 14px;
+      border: none;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .chip.active {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .check {
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      border: 1.5px solid var(--muted);
+      background: transparent;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      color: var(--accent-text);
+      font-size: 12px;
+    }
+
+    .task-item.done .check {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .task-text {
+      flex: 1;
+      font-size: 15px;
+      word-break: break-word;
+    }
+
+    .task-item.done .task-text {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .del-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 18px;
+      padding: 4px 6px;
+      cursor: pointer;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 48px 16px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+    }
+
+    /* Timer */
+    .timer-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px 20px;
+      text-align: center;
+    }
+
+    .presets {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .timer-display {
+      font-size: 64px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 8px;
+    }
+
+    .timer-status {
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 20px;
+      margin-bottom: 28px;
+    }
+
+    .timer-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .btn-secondary {
+      height: 48px;
+      padding: 0 18px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+
+    .stat-val {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .btn-danger {
+      width: 100%;
+      height: 46px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--danger);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Bottom Nav */
+    .tabbar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 460px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+      z-index: 10;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 6px 0;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      color: var(--text);
+    }
+
+    .tab-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <div class="brand">dayflow</div>
+        <div class="date-sub" id="todayDate"></div>
+      </div>
+      <button class="icon-btn" id="themeBtn" aria-label="Сменить тему">☀️</button>
+    </header>
+
+    <!-- Экран 1: Задачи -->
+    <section class="screen active" id="screen-tasks">
+      <div class="input-row">
+        <input type="text" id="taskInput" placeholder="Новая задача..." maxlength="100">
+        <button class="btn-primary" id="addBtn">+</button>
+      </div>
+
+      <div class="filters">
+        <button class="chip active" data-filter="all">Все</button>
+        <button class="chip" data-filter="active">В работе</button>
+        <button class="chip" data-filter="done">Готово</button>
+      </div>
+
+      <div class="task-list" id="taskList"></div>
+    </section>
+
+    <!-- Экран 2: Фокус -->
+    <section class="screen" id="screen-focus">
+      <div class="timer-card">
+        <div class="presets">
+          <button class="chip active" data-min="25">25 мин</button>
+          <button class="chip" data-min="15">15 мин</button>
+          <button class="chip" data-min="5">5 мин</button>
+        </div>
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div class="timer-status" id="timerStatus">Готов к запуску</div>
+        <div class="timer-actions">
+          <button class="btn-primary" id="startBtn">Старт</button>
+          <button class="btn-secondary" id="resetBtn">Сброс</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Экран 3: Статистика -->
+    <section class="screen" id="screen-stats">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="statTotal">0</div>
+          <div class="stat-label">Всего задач</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statDone">0</div>
+          <div class="stat-label">Выполнено</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statRate">0%</div>
+          <div class="stat-label">Прогресс</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statSessions">0</div>
+          <div class="stat-label">Фокус-сессий</div>
+        </div>
+      </div>
+      <button class="btn-danger" id="clearDoneBtn">Очистить выполненные задачи</button>
+    </section>
+  </div>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-tab="tasks">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Задачи</span>
+    </button>
+    <button class="tab-btn" data-tab="focus">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span>Фокус</span>
+    </button>
+    <button class="tab-btn" data-tab="stats">
+      <svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+      <span>Итоги</span>
+    </button>
+  </nav>
+
+  <script>
+    // Дата в шапке
+    document.getElementById('todayDate').textContent = new Intl.DateTimeFormat('ru-RU', {
+      weekday: 'long', day: 'numeric', month: 'long'
+    }).format(new Date());
+
+    // Тема
+    const themeBtn = document.getElementById('themeBtn');
+    const savedTheme = localStorage.getItem('df_theme') || 'light';
+    function applyTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      themeBtn.textContent = t === 'dark' ? '🌙' : '☀️';
+      localStorage.setItem('df_theme', t);
+    }
+    applyTheme(savedTheme);
+    themeBtn.addEventListener('click', () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+    });
+
+    // Навигация по табам
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`screen-${btn.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    // Задачи
+    let tasks = JSON.parse(localStorage.getItem('df_tasks') || '[]');
+    let sessions = Number(localStorage.getItem('df_sessions') || 0);
+    let currentFilter = 'all';
+
+    const taskInput = document.getElementById('taskInput');
+    const taskList = document.getElementById('taskList');
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    function saveAndRender() {
+      localStorage.setItem('df_tasks', JSON.stringify(tasks));
+      localStorage.setItem('df_sessions', String(sessions));
+      renderTasks();
+      renderStats();
+    }
+
+    function renderTasks() {
+      const filtered = tasks.filter(t => {
+        if (currentFilter === 'active') return !t.done;
+        if (currentFilter === 'done') return t.done;
+        return true;
+      });
+
+      if (!filtered.length) {
+        taskList.innerHTML = '<div class="empty">Пока пусто</div>';
+        return;
+      }
+
+      taskList.innerHTML = filtered.map(t => `
+        <div class="task-item ${t.done ? 'done' : ''}">
+          <button class="check" onclick="toggleTask(${t.id})">${t.done ? '✓' : ''}</button>
+          <div class="task-text">${escapeHtml(t.text)}</div>
+          <button class="del-btn" onclick="deleteTask(${t.id})" aria-label="Удалить">×</button>
+        </div>
+      `).join('');
+    }
+
+    function renderStats() {
+      const total = tasks.length;
+      const done = tasks.filter(t => t.done).length;
+      const rate = total ? Math.round((done / total) * 100) : 0;
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statDone').textContent = done;
+      document.getElementById('statRate').textContent = `${rate}%`;
+      document.getElementById('statSessions').textContent = sessions;
+    }
+
+    function addTask() {
+      const text = taskInput.value.trim();
+      if (!text) return;
+      tasks.unshift({ id: Date.now(), text, done: false });
+      taskInput.value = '';
+      saveAndRender();
+    }
+
+    window.toggleTask = (id) => {
+      tasks = tasks.map(t => t.id === id ? { ...t, done: !t.done } : t);
+      saveAndRender();
+    };
+
+    window.deleteTask = (id) => {
+      tasks = tasks.filter(t => t.id !== id);
+      saveAndRender();
+    };
+
+    document.getElementById('addBtn').addEventListener('click', addTask);
+    taskInput.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+    document.querySelectorAll('.filters .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.filters .chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentFilter = chip.dataset.filter;
+        renderTasks();
+      });
+    });
+
+    document.getElementById('clearDoneBtn').addEventListener('click', () => {
+      tasks = tasks.filter(t => !t.done);
+      saveAndRender();
+    });
+
+    // Таймер
+    let baseMinutes = 25;
+    let timeLeft = baseMinutes * 60;
+    let timerId = null;
+
+    const timerDisplay = document.getElementById('timerDisplay');
+    const timerStatus = document.getElementById('timerStatus');
+    const startBtn = document.getElementById('startBtn');
+
+    function updateTimerUI() {
+      const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+      const s = String(timeLeft % 60).padStart(2, '0');
+      timerDisplay.textContent = `${m}:${s}`;
+    }
+
+    function stopTimer() {
+      clearInterval(timerId);
+      timerId = null;
+      startBtn.textContent = 'Старт';
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (timerId) {
+        stopTimer();
+        timerStatus.textContent = 'На паузе';
+        return;
+      }
+      startBtn.textContent = 'Пауза';
+      timerStatus.textContent = 'Идёт фокус...';
+      timerId = setInterval(() => {
+        timeLeft--;
+        updateTimerUI();
+        if (timeLeft <= 0) {
+          stopTimer();
+          sessions++;
+          timeLeft = baseMinutes * 60;
+          updateTimerUI();
+          timerStatus.textContent = 'Сессия завершена';
+          saveAndRender();
+        }
+      }, 1000);
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      stopTimer();
+      timeLeft = baseMinutes * 60;
+      updateTimerUI();
+      timerStatus.textContent = 'Готов к запуску';
+    });
+
+    document.querySelectorAll('.presets .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.presets .chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        stopTimer();
+        baseMinutes = Number(chip.dataset.min);
+        timeLeft = baseMinutes * 60;
+        updateTimerUI();
+        timerStatus.textContent = 'Готов к запуску';
+      });
+    });
+
+    saveAndRender();
+  </script>
+</body>
+</html>
